@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080810" />
+  <meta name="description" content="DropShop AR — Browse and place home decor in your space with augmented reality." />
+  <title>DropShop AR — Home Decor</title>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Google Model Viewer (single CDN load; the element only lives in the AR modal) -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ════ NAV ══════════════════════════════════════════════════ -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <a class="nav-logo" href="#shop" aria-label="DropShop AR home">
+        <div class="logo-mark" aria-hidden="true">
+          <!-- Cube / layers icon -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span class="logo-text">DropShop AR</span>
+      </a>
+
+      <div class="nav-actions">
+        <button class="icon-btn" aria-label="Search products">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Your account">
+          <svg viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Shopping cart, 1 item">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+          <span class="badge" aria-hidden="true"></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ════ HERO ═════════════════════════════════════════════════ -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-eyebrow">
+      <span class="dot" aria-hidden="true"></span>
+      WebAR Shopping — Now Live
+    </div>
+    <h1 id="hero-heading">
+      Design Your Space<br>Before You <em>Buy It</em>
+    </h1>
+    <p class="hero-sub">
+      Browse our curated home decor collection and place any piece
+      in your room with augmented reality — no app needed.
+    </p>
+  </section>
+
+  <!-- ════ PRODUCT GRID ════════════════════════════════════════ -->
+  <main>
+    <section class="shop-section" id="shop" aria-labelledby="shop-heading">
+      <div class="section-header">
+        <h2 class="section-title" id="shop-heading">Featured Collection</h2>
+        <a class="section-link" href="#">View all →</a>
+      </div>
+
+      <!--
+        Cards are injected here by renderGrid() in script.js.
+        Each card receives a [data-product-id] button that triggers
+        the AR modal with the correct GLB src.
+      -->
+      <div class="product-grid" id="productGrid" aria-label="Home decor products"></div>
+    </section>
+  </main>
+
+  <!-- ════ SITE FOOTER ═════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <p>&copy; 2026 <a href="#">DropShop AR</a>. All rights reserved.</p>
+  </footer>
+
+  <!-- ════ AR MODAL ════════════════════════════════════════════
+       ONE model-viewer for the entire storefront.
+       src is empty at page load — script.js sets it on demand.
+  ═════════════════════════════════════════════════════════════ -->
+  <div class="ar-overlay" id="arOverlay" role="dialog" aria-modal="true" aria-labelledby="arProductName">
+    <!-- Top bar: product name + close -->
+    <div class="ar-topbar">
+      <span class="ar-product-name" id="arProductName">Loading…</span>
+      <button class="ar-close" id="arClose" aria-label="Close AR viewer">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading spinner (hidden once model fires 'load') -->
+    <div class="ar-spinner-wrap" id="arSpinner" aria-hidden="true">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- THE single shared model-viewer — no src at paint time -->
+    <model-viewer id="ar-viewer" alt="3D preview of selected product" ar ar-modes="webxr scene-viewer quick-look"
+      camera-controls auto-rotate auto-rotate-delay="800" rotation-per-second="22deg" shadow-intensity="1"
+      exposure="0.92" shadow-softness="0.75"></model-viewer>
+
+    <!-- Bottom bar: launch AR + wishlist -->
+    <div class="ar-bottombar">
+      <button class="btn-launch-ar" id="launchARBtn" aria-label="View product in your space with AR">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+        View in Your Space
+      </button>
+      <button class="btn-wishlist" id="wishlistBtn" aria-label="Add to wishlist">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- App logic (deferred; runs after DOM is parsed) -->
+  <script src="script.js" defer></script>
+
+</body>
+
+</html>
