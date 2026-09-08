@@ -342,6 +342,7 @@ body {
   /* spacing now handled by space-between on card-body */
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -356,8 +357,6 @@ body {
   flex-shrink: 0;
   /* never let the footer compress */
 }
-
-.price-wrap {}
 
 .card-price {
   display: block;
