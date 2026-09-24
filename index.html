@@ -8,10 +8,28 @@
   <meta name="description" content="DropShop AR — Browse and place home decor in your space with augmented reality." />
   <title>DropShop AR — Home Decor</title>
 
+  <!-- Apply saved theme before first paint to avoid a light/dark flash -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('dropshop_theme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) { /* localStorage unavailable — default theme applies */ }
+    })();
+  </script>
+
+  <!-- Fonts: Inter for UI/body, Fraunces as a serif display accent for the hero -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Google Model Viewer (single CDN load; the element only lives in the AR modal) -->
+  <!-- Google Model Viewer (single CDN load; used by the hero preview, the AR modal, and the offscreen dimension probe) -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
 
@@ -22,7 +40,6 @@
     <nav class="nav" aria-label="Main navigation">
       <a class="nav-logo" href="#shop" aria-label="DropShop AR home">
         <div class="logo-mark" aria-hidden="true">
-          <!-- Cube / layers icon -->
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
           </svg>
@@ -31,25 +48,48 @@
       </a>
 
       <div class="nav-actions">
-        <button class="icon-btn" aria-label="Search products">
+        <a class="nav-link" href="#shop">Shop</a>
+        <a class="nav-link" href="#how-it-works">How it works</a>
+        <a class="nav-link" href="#ai-stylist">AI Stylist</a>
+
+        <button class="icon-btn" id="themeToggle" aria-label="Switch to dark theme" aria-pressed="false">
+          <svg id="themeIconSun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg id="themeIconMoon" viewBox="0 0 24 24" style="display:none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+
+        <button class="icon-btn" id="searchNavBtn" aria-label="Search products">
           <svg viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
         </button>
-        <button class="icon-btn" aria-label="Your account">
+
+        <button class="icon-btn" id="accountBtn" aria-label="Your account">
           <svg viewBox="0 0 24 24">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
         </button>
-        <button class="icon-btn" aria-label="Shopping cart, 1 item">
+
+        <button class="icon-btn" id="wishlistNavBtn" aria-label="Wishlist, 0 items">
+          <svg viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span class="badge count-badge" id="wishlistBadge" hidden>0</span>
+        </button>
+
+        <button class="icon-btn" id="cartBtn" aria-label="Shopping cart, 0 items">
           <svg viewBox="0 0 24 24">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
             <line x1="3" y1="6" x2="21" y2="6" />
             <path d="M16 10a4 4 0 0 1-8 0" />
           </svg>
-          <span class="badge" aria-hidden="true"></span>
+          <span class="badge count-badge" id="cartBadge" hidden>0</span>
         </button>
       </div>
     </nav>
@@ -57,47 +97,292 @@
 
   <!-- ════ HERO ═════════════════════════════════════════════════ -->
   <section class="hero" aria-labelledby="hero-heading">
-    <div class="hero-eyebrow">
-      <span class="dot" aria-hidden="true"></span>
-      WebAR Shopping — Now Live
+    <div class="hero-glow" aria-hidden="true"></div>
+
+    <div class="hero-copy">
+      <div class="hero-eyebrow">
+        <span class="dot" aria-hidden="true"></span>
+        SPATIAL COMMERCE, REIMAGINED
+      </div>
+
+      <h1 id="hero-heading">
+        See it. <em>Place it.</em><br>Love it.
+      </h1>
+
+      <p class="hero-sub">
+        DropShop AR turns every product page into a full 3D showroom. Spin
+        each piece from any angle, check if it actually fits your room using
+        the model's real measurements, then drop it into your space with your
+        camera — before a single rupee changes hands.
+      </p>
+
+      <div class="hero-cta-row">
+        <a class="btn-hero-primary" href="#shop">Explore Collection</a>
+        <button class="btn-hero-secondary" id="heroTryARBtn" data-product-id="sheen-chair">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+          Try AR Now
+        </button>
+      </div>
+
+      <ul class="hero-highlight-list" aria-label="Key features">
+        <li>
+          <span class="hero-highlight-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          </span>
+          <div><strong>Real 3D scans</strong><span>Not renders — actual scanned models you can spin freely</span></div>
+        </li>
+        <li>
+          <span class="hero-highlight-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+          </span>
+          <div><strong>Room-accurate fit</strong><span>Checked against the model's true measured size</span></div>
+        </li>
+        <li>
+          <span class="hero-highlight-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </span>
+          <div><strong>One-tap AR</strong><span>WebXR, Scene Viewer and Quick Look, no app required</span></div>
+        </li>
+      </ul>
     </div>
-    <h1 id="hero-heading">
-      Design Your Space<br>Before You <em>Buy It</em>
-    </h1>
-    <p class="hero-sub">
-      Browse our curated home decor collection and place any piece
-      in your room with augmented reality — no app needed.
-    </p>
+
+    <div class="hero-visual">
+      <div class="hero-product-card" id="heroProductCard">
+        <span class="hero-product-tag">Featured — drag to explore in 3D</span>
+        <div class="hero-product-img-wrap">
+          <model-viewer
+            id="heroModelViewer"
+            camera-controls
+            disable-zoom
+            interaction-prompt="none"
+            auto-rotate
+            auto-rotate-delay="600"
+            rotation-per-second="16deg"
+            shadow-intensity="1"
+            shadow-softness="0.8"
+            exposure="0.95"
+            loading="eager"
+            reveal="auto"
+            alt=""
+          ></model-viewer>
+          <div class="drag-rotate-hint" id="dragRotateHint">
+            <span class="drag-rotate-dot" aria-hidden="true"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" />
+            </svg>
+            Drag to explore in 3D
+          </div>
+        </div>
+        <div class="hero-product-info">
+          <span class="hero-product-name" id="heroProductName"></span>
+          <span class="hero-product-price" id="heroProductPrice"></span>
+        </div>
+
+        <div class="hero-trust-pill" aria-hidden="true">
+          <span class="hero-trust-avatars">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="hero-trust-text">Loved by early shoppers</span>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <!-- ════ PRODUCT GRID ════════════════════════════════════════ -->
+  <!-- ════ STATS / BLACK BAND ═════════════════════════════════════ -->
+  <section class="stats-band" aria-label="DropShop AR at a glance">
+    <div class="stats-band-inner">
+      <div class="stat-item">
+        <span class="stat-num" id="statProductCount">6</span>
+        <span class="stat-label">3D products</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">360°</span>
+        <span class="stat-label">product preview</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">1 tap</span>
+        <span class="stat-label">to launch AR</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">AI</span>
+        <span class="stat-label">styling assistant</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ HOW IT WORKS ═══════════════════════════════════════════ -->
+  <section class="how-it-works" id="how-it-works" aria-labelledby="how-it-works-heading">
+    <div class="how-it-works-header">
+      <h2 class="section-title" id="how-it-works-heading">How DropShop AR works</h2>
+      <p class="how-it-works-sub">From browsing to buying, every step happens in your space — not just on your screen.</p>
+    </div>
+    <div class="how-steps">
+
+      <div class="how-step">
+        <div class="how-step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </div>
+        <span class="how-step-num">01</span>
+        <h3>Browse in 3D</h3>
+        <p>Every product ships as a real 3D model — rotate, zoom and inspect it from any angle before you decide.</p>
+      </div>
+
+      <div class="how-step">
+        <div class="how-step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+        </div>
+        <span class="how-step-num">02</span>
+        <h3>Check the fit</h3>
+        <p>Enter your room's width, length and height — DropShop measures the actual model and tells you if it fits.</p>
+      </div>
+
+      <div class="how-step">
+        <div class="how-step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+        </div>
+        <span class="how-step-num">03</span>
+        <h3>Try it in AR</h3>
+        <p>Launch your camera and place the piece life-size in your actual room with WebXR, Scene Viewer or Quick Look.</p>
+      </div>
+
+      <div class="how-step">
+        <div class="how-step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+        </div>
+        <span class="how-step-num">04</span>
+        <h3>Compare &amp; buy</h3>
+        <p>Shortlist, compare up to three pieces side by side, then add your favorites to cart with confidence.</p>
+      </div>
+
+    </div>
+  </section>
+
   <main>
+    <!-- ════ RECENTLY VIEWED ═══════════════════════════════════ -->
+    <section class="recently-viewed-section" id="recentlyViewedSection" hidden aria-labelledby="recently-viewed-heading">
+      <div class="shop-section" style="padding-bottom:0;">
+        <div class="section-header">
+          <h2 class="section-title" id="recently-viewed-heading">Recently Viewed</h2>
+          <button class="recently-viewed-clear" id="recentlyViewedClearBtn">Clear all</button>
+        </div>
+        <div class="mini-card-row" id="recentlyViewedRow"></div>
+      </div>
+    </section>
+
+    <!-- ════ PRODUCT GRID ════════════════════════════════════════ -->
     <section class="shop-section" id="shop" aria-labelledby="shop-heading">
       <div class="section-header">
         <h2 class="section-title" id="shop-heading">Featured Collection</h2>
-        <a class="section-link" href="#">View all →</a>
       </div>
 
-      <!--
-        Cards are injected here by renderGrid() in script.js.
-        Each card receives a [data-product-id] button that triggers
-        the AR modal with the correct GLB src.
-      -->
+      <!-- Discovery toolbar: search, category filters, sort, compare -->
+      <div class="shop-toolbar" id="shopToolbar">
+        <div class="search-field">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="search" id="searchInput" placeholder="Search products…" aria-label="Search products" />
+        </div>
+
+        <div class="pill-filter-row" id="categoryPills" aria-label="Filter by category"></div>
+
+        <select id="sortSelect" class="sort-select" aria-label="Sort products">
+          <option value="featured">Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="rating-desc">Highest Rated</option>
+          <option value="newest">Newest</option>
+        </select>
+
+        <button class="compare-inline-btn" id="compareInlineBtn" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />
+          </svg>
+          Compare <span id="compareInlineCount">0</span>
+        </button>
+      </div>
+
       <div class="product-grid" id="productGrid" aria-label="Home decor products"></div>
+
+      <p class="empty-state" id="emptyState" hidden>No products match your search. Try a different keyword or filter.</p>
     </section>
   </main>
 
+  <!-- ════ AI STYLIST (COMING SOON) ═══════════════════════════════ -->
+  <section class="ai-stylist" id="ai-stylist" aria-labelledby="ai-stylist-heading">
+    <div class="ai-stylist-copy">
+      <div class="ai-stylist-eyebrow"><span class="dot" aria-hidden="true"></span>AI STYLIST</div>
+      <h2 id="ai-stylist-heading">Tell us your room.<br><em>We'll style it.</em></h2>
+      <p>Describe your space, mood, colors, budget, or the piece you already own. The AI will match you to the catalog — grounded in real product data, not guesses.</p>
+      <span class="coming-soon-pill">Coming soon</span>
+    </div>
+
+    <div class="ai-stylist-panel">
+      <div class="ai-stylist-panel-head">
+        <span class="ai-stylist-status"><span class="dot ok" aria-hidden="true"></span>DropShop intelligence</span>
+        <span class="ai-stylist-powered">Powered by AI</span>
+      </div>
+      <textarea class="ai-stylist-input" id="aiStylistInput" rows="3"
+        placeholder="e.g. I have a small warm living room, beige walls and a ₹50,000 budget. I want one statement piece."></textarea>
+      <div class="ai-stylist-chips">
+        <button type="button" class="ai-chip" data-ai-chip>Minimalist</button>
+        <button type="button" class="ai-chip" data-ai-chip>Warm luxury</button>
+        <button type="button" class="ai-chip" data-ai-chip>Bold modern</button>
+      </div>
+      <button class="btn-launch-ar ai-stylist-cta" id="aiStylistCta" style="width:100%; justify-content:center;">
+        Find my pieces <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  </section>
+
   <!-- ════ SITE FOOTER ═════════════════════════════════════════ -->
   <footer class="site-footer">
-    <p>&copy; 2026 <a href="#">DropShop AR</a>. All rights reserved.</p>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo" style="pointer-events:none;">
+          <div class="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+          </div>
+          <span class="logo-text">DropShop AR</span>
+        </div>
+        <p class="footer-tagline">See it. Place it. Love it. Spatial commerce for real rooms.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#shop">All products</a>
+        <a href="#shop">Sofas &amp; Seating</a>
+        <a href="#shop">Lighting</a>
+        <a href="#shop">Decor</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#how-it-works">How it works</a>
+        <a href="#ai-stylist">AI Stylist</a>
+        <a href="#shop">Fit Checker</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Returns &amp; shipping</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 <a href="#">DropShop AR</a>. All rights reserved.</p>
+      <p class="footer-fineprint">3D previews are for reference — actual product may vary slightly.</p>
+    </div>
   </footer>
 
-  <!-- ════ AR MODAL ════════════════════════════════════════════
-       ONE model-viewer for the entire storefront.
-       src is empty at page load — script.js sets it on demand.
-  ═════════════════════════════════════════════════════════════ -->
+  <!-- ════ AR MODAL ════════════════════════════════════════════ -->
   <div class="ar-overlay" id="arOverlay" role="dialog" aria-modal="true" aria-labelledby="arProductName">
-    <!-- Top bar: product name + close -->
     <div class="ar-topbar">
       <span class="ar-product-name" id="arProductName">Loading…</span>
       <button class="ar-close" id="arClose" aria-label="Close AR viewer">
@@ -108,17 +393,35 @@
       </button>
     </div>
 
-    <!-- Loading spinner (hidden once model fires 'load') -->
+    <!-- Live measurement readout — populated from the same
+         model-viewer.getDimensions() call the Fit Checker uses. -->
+    <div class="ar-dims-chip" id="arDimsChip" aria-live="polite">
+      <span><strong id="arDimW">–</strong> W</span>
+      <span class="ar-dims-sep">×</span>
+      <span><strong id="arDimD">–</strong> D</span>
+      <span class="ar-dims-sep">×</span>
+      <span><strong id="arDimH">–</strong> H</span>
+      <span class="ar-dims-note" id="arDimNote"></span>
+    </div>
+
     <div class="ar-spinner-wrap" id="arSpinner" aria-hidden="true">
       <div class="spinner"></div>
     </div>
 
-    <!-- THE single shared model-viewer — no src at paint time -->
+    <div class="ar-error-wrap" id="arError" hidden>
+      <p>We couldn't load this 3D model.</p>
+      <p class="ar-error-sub">
+        This means the browser tried to fetch the file below and it failed —
+        usually a missing or misnamed <code>.glb</code>, not a bug in the page.
+        <br>Expected file: <code id="arErrorPath">—</code>
+      </p>
+      <button class="btn-hero-secondary" id="arRetryBtn">Retry</button>
+    </div>
+
     <model-viewer id="ar-viewer" alt="3D preview of selected product" ar ar-modes="webxr scene-viewer quick-look"
-      camera-controls auto-rotate auto-rotate-delay="800" rotation-per-second="22deg" shadow-intensity="1"
+      camera-controls auto-rotate-delay="800" rotation-per-second="22deg" shadow-intensity="1"
       exposure="0.92" shadow-softness="0.75"></model-viewer>
 
-    <!-- Bottom bar: launch AR + wishlist -->
     <div class="ar-bottombar">
       <button class="btn-launch-ar" id="launchARBtn" aria-label="View product in your space with AR">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -135,7 +438,124 @@
     </div>
   </div>
 
-  <!-- App logic (deferred; runs after DOM is parsed) -->
+  <!-- ════ PRODUCT DETAIL MODAL ═══════════════════════════════════ -->
+  <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal detail-modal">
+      <button class="ar-close modal-close" id="detailClose" aria-label="Close product details">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      <div class="detail-grid">
+        <div class="detail-img-wrap">
+          <img id="detailImg" src="" alt="" />
+        </div>
+
+        <div class="detail-info">
+          <div class="detail-badges">
+            <span class="detail-category-pill" id="detailCategory"></span>
+            <span class="detail-availability-badge" id="detailAvailabilityBadge"></span>
+          </div>
+          <h2 id="detailTitle" class="detail-title"></h2>
+          <div class="card-rating" id="detailRating"></div>
+          <p class="detail-price" id="detailPrice"></p>
+          <p class="detail-desc" id="detailDesc"></p>
+
+          <div class="detail-spec-grid" id="detailSpecs"></div>
+
+          <div class="detail-dimensions" id="detailDimensions">
+            <h3>Dimensions</h3>
+            <p id="detailDimensionsValue" class="dim-loading">Measuring 3D model…</p>
+          </div>
+
+          <div class="fit-checker" id="fitChecker">
+            <h3>Fit Checker</h3>
+            <p class="fit-checker-sub">Enter your available space to see if this piece fits.</p>
+            <div class="fit-form">
+              <label>Width (ft)<input type="number" min="0" step="0.1" id="fitWidth" /></label>
+              <label>Length (ft)<input type="number" min="0" step="0.1" id="fitLength" /></label>
+              <label>Height (ft)<input type="number" min="0" step="0.1" id="fitHeight" /></label>
+            </div>
+            <button class="btn-hero-secondary" id="fitCheckBtn" style="width:100%; justify-content:center;" disabled>Measuring product…</button>
+            <p id="fitResult" class="fit-result" hidden></p>
+          </div>
+
+          <div class="detail-actions">
+            <button class="btn-launch-ar detail-btn" id="detailAddCartBtn">Add to Cart</button>
+            <button class="btn-wishlist detail-icon-btn" id="detailWishlistBtn" aria-label="Add to wishlist">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+            <button class="btn-wishlist detail-icon-btn" id="detailCompareBtn" aria-label="Add to compare">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />
+              </svg>
+            </button>
+            <button class="btn-hero-secondary detail-btn" id="detailViewARBtn">View in AR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ COMPARE MODAL ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareModalTitle">
+    <div class="modal compare-modal">
+      <button class="ar-close modal-close" id="compareModalClose" aria-label="Close comparison">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <h2 id="compareModalTitle" class="detail-title" style="margin-bottom:16px;">Compare Products</h2>
+      <div class="compare-table-wrap">
+        <table class="compare-table" id="compareTable"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CART DRAWER ═══════════════════════════════════════════ -->
+  <div class="drawer-overlay" id="cartDrawerOverlay"></div>
+  <aside class="drawer" id="cartDrawer" role="dialog" aria-modal="true" aria-label="Shopping cart">
+    <div class="drawer-header">
+      <h2>Your Cart</h2>
+      <button class="ar-close" id="cartClose" aria-label="Close cart">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="cartItemsList"></div>
+    <p class="drawer-empty" id="cartEmptyState" hidden>Your cart is empty.</p>
+    <div class="drawer-footer">
+      <div class="drawer-subtotal-row">
+        <span>Subtotal</span>
+        <span id="cartSubtotalValue">₹0</span>
+      </div>
+      <button class="btn-launch-ar" id="checkoutBtn" style="width:100%; justify-content:center;">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <!-- ════ WISHLIST DRAWER ═══════════════════════════════════════ -->
+  <div class="drawer-overlay" id="wishlistDrawerOverlay"></div>
+  <aside class="drawer" id="wishlistDrawer" role="dialog" aria-modal="true" aria-label="Wishlist">
+    <div class="drawer-header">
+      <h2>Wishlist</h2>
+      <button class="ar-close" id="wishlistClose" aria-label="Close wishlist">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="wishlistItemsList"></div>
+    <p class="drawer-empty" id="wishlistEmptyState" hidden>Your wishlist is empty.</p>
+  </aside>
+
+  <!-- ════ TOASTS ═══════════════════════════════════════════════ -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Off-screen probe used purely to read real GLB dimensions via getDimensions() -->
+  <model-viewer id="dimensionProbe" style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;" aria-hidden="true"></model-viewer>
+
   <script src="script.js" defer></script>
 
 </body>
