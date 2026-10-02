@@ -57,7 +57,7 @@ const PRODUCTS = [
     reviewCount: 214,
     availability: 'in-stock',
     images: ['https://m.media-amazon.com/images/I/71-ny3AfH2L._AC_UF894,1000_QL80_.jpg'],
-    model: { src: './models/GlamVelvetSofa.glb', iosSrc: null },
+    model: { src: '/models/GlamVelvetSofa.glb', iosSrc: null },
     specs: { material: 'Velvet upholstery, gold-finished steel frame', color: 'Emerald / Gold', assembly: 'Legs attach on arrival' },
     fallbackDimsFt: { width: 6.6, depth: 3.0, height: 2.8 },
   },
@@ -74,7 +74,7 @@ const PRODUCTS = [
     reviewCount: 58,
     availability: 'in-stock',
     images: ['https://m.media-amazon.com/images/I/81cfIOjQVyL._SL1500_.jpg'],
-    model: { src: './models/GlassHurricaneCandleHolder.glb', iosSrc: null },
+    model: { src: '/models/GlassHurricaneCandleHolder.glb', iosSrc: null },
     specs: { material: 'Borosilicate glass, brushed brass', color: 'Clear / Brass', assembly: 'None required' },
     fallbackDimsFt: { width: 0.5, depth: 0.5, height: 0.8 },
   },
@@ -91,7 +91,7 @@ const PRODUCTS = [
     reviewCount: 41,
     availability: 'in-stock',
     images: ['https://www.homesake.in/cdn/shop/files/IH0F231-SMK-TEAR_Theme2_a214b76c-dd7d-4b00-8993-f14c23f990ab.jpg?v=1765962191'],
-    model: { src: './models/GlassVaseFlowers.glb', iosSrc: null },
+    model: { src: '/models/GlassVaseFlowers.glb', iosSrc: null },
     specs: { material: 'Clear glass, dried pampas grass', color: 'Clear / Natural', assembly: 'None required' },
     fallbackDimsFt: { width: 0.7, depth: 0.7, height: 1.2 },
   },
@@ -108,7 +108,7 @@ const PRODUCTS = [
     reviewCount: 96,
     availability: 'in-stock',
     images: ['https://i.pinimg.com/736x/2a/2f/3b/2a2f3b6c856efe23d75107d6dc887b88.jpg'],
-    model: { src: './models/IridescenceLamp.glb', iosSrc: null },
+    model: { src: '/models/IridescenceLamp.glb', iosSrc: null },
     specs: { material: 'Iridescent glass shade, ceramic base', color: 'Iridescent / Matte White', assembly: 'None required' },
     fallbackDimsFt: { width: 1.0, depth: 1.0, height: 1.5 },
   },
@@ -125,7 +125,7 @@ const PRODUCTS = [
     reviewCount: 312,
     availability: 'low-stock',
     images: ['https://bigbossfurniture.ca/storage/app/public/uploads/SZgs93BHvITs6HUYdnV8pLliUzCU26HrnqPMBBYD.jpg'],
-    model: { src: './models/SheenChair.glb', iosSrc: null },
+    model: { src: '/models/SheenChair.glb', iosSrc: null },
     specs: { material: 'Performance fabric, satin-nickel base', color: 'Charcoal / Nickel', assembly: 'Swivel base clicks into place' },
     fallbackDimsFt: { width: 2.3, depth: 2.3, height: 3.0 },
   },
@@ -142,7 +142,7 @@ const PRODUCTS = [
     reviewCount: 27,
     availability: 'in-stock',
     images: ['https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T1/images/I/41ZUn14gyzL._SY300_SX300_QL70_FMwebp_.jpg'],
-    model: { src: './models/SpecularSilkPouf.glb', iosSrc: null },
+    model: { src: '/models/SpecularSilkPouf.glb', iosSrc: null },
     specs: { material: 'Hand-embroidered silk, foam fill', color: 'Ivory / Gold thread', assembly: 'None required' },
     fallbackDimsFt: { width: 1.6, depth: 1.6, height: 1.3 },
   },
@@ -199,10 +199,6 @@ const arViewer = document.getElementById('ar-viewer');
 const arProductName = document.getElementById('arProductName');
 const arClose = document.getElementById('arClose');
 const arSpinner = document.getElementById('arSpinner');
-const arError = document.getElementById('arError');
-const arErrorPath = document.getElementById('arErrorPath');
-const arErrorDiagnosis = document.getElementById('arErrorDiagnosis');
-const arRetryBtn = document.getElementById('arRetryBtn');
 const launchARBtn = document.getElementById('launchARBtn');
 const wishlistBtn = document.getElementById('wishlistBtn');
 const heroModelViewer = document.getElementById('heroModelViewer');
@@ -1117,17 +1113,9 @@ function openAR(productId) {
   recordRecentlyViewed(productId);
 
   arProductName.textContent = product.title;
-  arError.hidden = true;
   arSpinner.classList.remove('hidden');
-  wishlistBtn.classList.toggle('liked', wishlist.includes(productId));
   resetArDimsChip();
   populateArDimsChip(product);
-
-  // Fill this in up front (not only inside the error handler below) so
-  // the expected path is always correct even if the error fires before
-  // that handler's own lookup would have resolved, or if this file is
-  // ever loaded out of sync with an updated version of the HTML.
-  if (arErrorPath) arErrorPath.textContent = product.model.src;
 
   arViewer.setAttribute('src', product.model.src);
   if (!prefersReducedMotion) {
@@ -1159,111 +1147,8 @@ function closeAR() {
 
 arViewer.addEventListener('load', () => {
   arSpinner.classList.add('hidden');
-  arError.hidden = true;
 });
 
-// Shows *why* the model failed: this only fires when the browser's
-// fetch of model.src genuinely fails (404, bad/corrupt .glb, network
-// error) — surfacing the path makes that easy to diagnose instead of
-// leaving a generic, unexplained error on screen.
-/* Actually fetches the .glb the browser just failed on and inspects the
-   response, so the error screen can say exactly what's wrong instead of
-   a generic "missing or misnamed" guess. Checks, in order: whether the
-   server even served it (status code), whether it's suspiciously small
-   (a Git LFS pointer file is typically well under 1 KB), and whether it
-   starts with the real glTF-binary magic bytes ("glTF") that every
-   valid .glb must have. */
-async function diagnoseModelFailure(url) {
-  let response;
-  try {
-    response = await fetch(url, { cache: 'no-store' });
-  } catch (err) {
-    return `The browser couldn't reach "${url}" at all (network error) — make sure your local server is still running and the path/port are correct.`;
-  }
-
-  if (!response.ok) {
-    return `The server responded ${response.status} (${response.statusText || 'error'}) for this path — the file isn't being served from there. Double-check the folder name, spelling and capitalization.`;
-  }
-
-  let buffer;
-  try {
-    buffer = await response.arrayBuffer();
-  } catch (err) {
-    return `The server responded OK, but the response body couldn't be read. Try reloading.`;
-  }
-
-  const sizeKB = Math.round(buffer.byteLength / 1024);
-  const bytes = new Uint8Array(buffer);
-
-  if (buffer.byteLength < 2000) {
-    const text = new TextDecoder().decode(bytes);
-    if (text.startsWith('version https://git-lfs')) {
-      return `This file is only ${buffer.byteLength} bytes — it's a Git LFS pointer, not the actual model. Run "git lfs install" then "git lfs pull" in your project folder, then Retry.`;
-    }
-    return `This file is only ${sizeKB} KB — far too small to be a real 3D model. It's likely a placeholder or a failed export. Replace it with the actual .glb and Retry.`;
-  }
-
-  // Every valid .glb starts with the ASCII bytes "glTF" (the binary
-  // glTF magic number) — if that's missing, this isn't a real .glb.
-  const magic = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
-  if (magic !== 'glTF') {
-    return `The server sent ${sizeKB} KB, but it doesn't start with a valid glTF-binary header — this file may be corrupted, or isn't actually a .glb despite its name. Try re-exporting or re-downloading it, then Retry.`;
-  }
-
-  return `The file loaded fine (${sizeKB} KB, valid glTF header) but the 3D viewer still couldn't render it — this usually means an unsupported glTF feature or extension. Try re-exporting with simpler settings, or test the file at gltf-viewer.donmccurdy.com to confirm it's valid.`;
-}
-
-function runArErrorDiagnosis(product) {
-  if (!arErrorDiagnosis || !product) return;
-  arErrorDiagnosis.textContent = 'Checking exactly why…';
-  diagnoseModelFailure(product.model.src).then(message => {
-    // Only apply if the error screen is still showing for this same
-    // product — the user may have closed it or moved on by the time
-    // this resolves.
-    if (currentARProductId === product.id && !arError.hidden) {
-      arErrorDiagnosis.textContent = message;
-    }
-  });
-}
-
-arViewer.addEventListener('error', (event) => {
-  // model-viewer can fire a secondary 'error' event for a minor,
-  // unrelated hiccup (e.g. an ancillary resource) even after the
-  // primary model has already loaded and is rendering correctly.
-  // If that's the case, this is not a real failure — ignore it
-  // rather than covering a working model with the error overlay.
-  if (arViewer.loaded) {
-    console.warn('DropShop AR: ignored a secondary error event after successful load:', event.detail);
-    return;
-  }
-  // Also ignore a delayed error for a model the user has already
-  // navigated away from (closed the modal, or opened a different
-  // product before this one's request settled). This is a plain
-  // string comparison — no network call, so it can't itself fail
-  // or stall the way a duplicate fetch of the same file could.
-  const currentSrc = arViewer.getAttribute('src') || '';
-  if (currentSrc !== arActiveModelSrc) {
-    console.warn('DropShop AR: ignored a stale error for a model that is no longer active:', event.detail);
-    return;
-  }
-  arSpinner.classList.add('hidden');
-  arError.hidden = false;
-  const product = productById(currentARProductId);
-  if (product && arErrorPath) {
-    arErrorPath.textContent = product.model.src;
-  }
-  runArErrorDiagnosis(product);
-  console.warn('DropShop AR: model-viewer failed to load the requested GLB:', product && product.model.src, event.detail);
-});
-
-arRetryBtn.addEventListener('click', () => {
-  if (!currentARProductId) return;
-  const product = productById(currentARProductId);
-  arActiveModelSrc = product.model.src;
-  arError.hidden = true;
-  arSpinner.classList.remove('hidden');
-  arViewer.setAttribute('src', product.model.src);
-});
 
 launchARBtn.addEventListener('click', () => {
   if (arViewer.canActivateAR) {

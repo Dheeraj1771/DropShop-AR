@@ -408,16 +408,6 @@
       <div class="spinner"></div>
     </div>
 
-    <div class="ar-error-wrap" id="arError" hidden>
-      <p>We couldn't load this 3D model.</p>
-      <p class="ar-error-sub">
-        This means the browser tried to fetch the file below and it failed —
-        usually a missing or misnamed <code>.glb</code>, not a bug in the page.
-        <br>Expected file: <code id="arErrorPath">—</code>
-      </p>
-      <button class="btn-hero-secondary" id="arRetryBtn">Retry</button>
-    </div>
-
     <model-viewer id="ar-viewer" alt="3D preview of selected product" ar ar-modes="webxr scene-viewer quick-look"
       camera-controls auto-rotate-delay="800" rotation-per-second="22deg" shadow-intensity="1"
       exposure="0.92" shadow-softness="0.75"></model-viewer>
