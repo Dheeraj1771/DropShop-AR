@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f1ea" />
+  <title>Create Account — DropShop AR</title>
+
+  <!-- Apply saved theme before first paint -->
+  <script>
+    try {
+      if (localStorage.getItem('dropshop_theme') === 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (_) {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ── Tokens (mirrors styles.css) ────────────────────────── */
+    :root {
+      --bg:         #f6f1ea;
+      --surface:    #ffffff;
+      --border:     rgba(23,20,18,0.08);
+      --border-h:   rgba(23,20,18,0.16);
+      --text:       #17140f;
+      --text-2:     #6b6459;
+      --accent:     #c1502e;
+      --accent-dim: rgba(193,80,46,0.14);
+      --accent-glow:rgba(193,80,46,0.32);
+      --radius-md:  16px;
+      --radius-lg:  24px;
+      --font:       'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display:'Fraunces', serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+    [data-theme="dark"] {
+      --bg:         #14120f;
+      --surface:    #201d18;
+      --border:     rgba(255,255,255,0.08);
+      --border-h:   rgba(255,255,255,0.16);
+      --text:       #f2ede3;
+      --text-2:     #a39c8d;
+      --accent:     #e0703f;
+      --accent-dim: rgba(224,112,63,0.16);
+      --accent-glow:rgba(224,112,63,0.32);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px calc(32px + env(safe-area-inset-bottom));
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Brand mark ─────────────────────────────────────────── */
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      box-shadow: 0 0 18px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .brand-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .brand-name {
+      font-size: 18px; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--text);
+    }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.07);
+    }
+
+    .auth-card h1 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .auth-card h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-2);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Form fields ─────────────────────────────────────────── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .field label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: 0.2px;
+    }
+    .field input {
+      height: 46px;
+      padding: 0 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: var(--font);
+      color: var(--text);
+      transition: border-color 0.18s var(--ease), box-shadow 0.18s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .field input::placeholder { color: var(--text-2); opacity: 0.6; }
+
+    /* ── Error message ──────────────────────────────────────── */
+    .auth-error {
+      font-size: 13px;
+      color: #c0392b;
+      background: rgba(192,57,43,0.08);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    [data-theme="dark"] .auth-error {
+      color: #ff7b6b;
+      background: rgba(255,123,107,0.1);
+      border-color: rgba(255,123,107,0.22);
+    }
+
+    /* ── Submit button ──────────────────────────────────────── */
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      margin-top: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      letter-spacing: -0.2px;
+      box-shadow: 0 4px 18px var(--accent-glow);
+      transition: opacity 0.18s, transform 0.14s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-submit:hover   { opacity: 0.88; }
+    .btn-submit:active  { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Footer link ────────────────────────────────────────── */
+    .auth-footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13.5px;
+      color: var(--text-2);
+    }
+    .auth-footer a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* ── Back-to-home link inside the card ──────────────────── */
+    .auth-back {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+    .auth-back:hover { color: var(--accent); }
+
+    /* ── Inline feedback messages ────────────────────────────── */
+    .auth-error {
+      font-size: 13px;
+      color: #c0392b;
+      background: rgba(192,57,43,0.08);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    [data-theme="dark"] .auth-error {
+      color: #ff7b6b;
+      background: rgba(255,123,107,0.1);
+      border-color: rgba(255,123,107,0.22);
+    }
+    .auth-success {
+      font-size: 13px;
+      color: #1a6b3c;
+      background: rgba(26,107,60,0.08);
+      border: 1px solid rgba(26,107,60,0.22);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    [data-theme="dark"] .auth-success {
+      color: #4dbb80;
+      background: rgba(77,187,128,0.1);
+      border-color: rgba(77,187,128,0.22);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Brand -->
+  <a class="auth-brand" href="index.html" aria-label="Back to DropShop AR">
+    <div class="brand-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="brand-name">DropShop AR</span>
+  </a>
+
+  <!-- Card -->
+  <div class="auth-card">
+    <a href="index.html" class="auth-back" aria-label="Back to home">
+      ← Back to Home
+    </a>
+    <h1>Create an <em>account</em></h1>
+    <p class="auth-subtitle">Start placing furniture in your space before you buy it.</p>
+
+    <form id="registerForm" novalidate>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="At least 8 characters"
+          autocomplete="new-password"
+          required
+          minlength="8"
+        />
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">Confirm password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          placeholder="Repeat your password"
+          autocomplete="new-password"
+          required
+        />
+      </div>
+
+      <button class="btn-submit" type="submit">Create Account</button>
+    </form>
+  </div>
+
+  <p class="auth-footer">
+    Already have an account? <a href="login.html">Sign in</a>
+  </p>
+
+  <script src="auth.js"></script>
+</body>
+</html>

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#080810" />
+  <meta name="theme-color" content="#f6f1ea" />
   <meta name="description" content="DropShop AR — Browse and place home decor in your space with augmented reality." />
   <title>DropShop AR — Home Decor</title>
-
   <!-- Apply saved theme before first paint to avoid a light/dark flash -->
   <script>
     (function () {
@@ -17,7 +15,6 @@
       } catch (e) { /* localStorage unavailable — default theme applies */ }
     })();
   </script>
-
   <!-- Fonts: Inter for UI/body, Fraunces as a serif display accent for the hero -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,20 +22,16 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet"
   />
-
   <!-- Stylesheet -->
   <link rel="stylesheet" href="styles.css" />
-
   <!-- Google Model Viewer (single CDN load; used by the hero preview, the AR modal, and the offscreen dimension probe) -->
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 </head>
-
 <body>
-
   <!-- ════ NAV ══════════════════════════════════════════════════ -->
   <header>
     <nav class="nav" aria-label="Main navigation">
-      <a class="nav-logo" href="#shop" aria-label="DropShop AR home">
+      <a class="nav-logo" href="index.html" aria-label="DropShop AR home">
         <div class="logo-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
@@ -46,12 +39,12 @@
         </div>
         <span class="logo-text">DropShop AR</span>
       </a>
-
       <div class="nav-actions">
+        <!-- Replaced at runtime by the inline auth-nav script below -->
+        <a class="nav-link" id="navAuthLink" href="index.html">← Dashboard</a>
         <a class="nav-link" href="#shop">Shop</a>
         <a class="nav-link" href="#how-it-works">How it works</a>
         <a class="nav-link" href="#ai-stylist">AI Stylist</a>
-
         <button class="icon-btn" id="themeToggle" aria-label="Switch to dark theme" aria-pressed="false">
           <svg id="themeIconSun" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="4" />
@@ -61,28 +54,46 @@
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         </button>
-
         <button class="icon-btn" id="searchNavBtn" aria-label="Search products">
           <svg viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
         </button>
-
+        <!-- Profile chip: hidden by default, shown for logged-in users via inline script -->
+        <a id="storeProfileChip"
+           href="account.html"
+           aria-label="Edit your profile"
+           style="display:none; align-items:center; gap:7px;
+                  background:var(--surface); border:1px solid var(--border);
+                  border-radius:999px; padding:4px 12px 4px 5px;
+                  font-size:13px; font-weight:600; color:var(--text);
+                  text-decoration:none; white-space:nowrap; flex-shrink:0;">
+          <span style="width:26px;height:26px;border-radius:50%;
+                       background:var(--accent-dim);
+                       display:grid;place-items:center;flex-shrink:0;"
+                aria-hidden="true">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--accent)" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <span id="storeProfileName">Account</span>
+        </a>
         <button class="icon-btn" id="accountBtn" aria-label="Your account">
           <svg viewBox="0 0 24 24">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
         </button>
-
         <button class="icon-btn" id="wishlistNavBtn" aria-label="Wishlist, 0 items">
           <svg viewBox="0 0 24 24">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
           <span class="badge count-badge" id="wishlistBadge" hidden>0</span>
         </button>
-
         <button class="icon-btn" id="cartBtn" aria-label="Shopping cart, 0 items">
           <svg viewBox="0 0 24 24">
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -98,24 +109,20 @@
   <!-- ════ HERO ═════════════════════════════════════════════════ -->
   <section class="hero" aria-labelledby="hero-heading">
     <div class="hero-glow" aria-hidden="true"></div>
-
     <div class="hero-copy">
       <div class="hero-eyebrow">
         <span class="dot" aria-hidden="true"></span>
         SPATIAL COMMERCE, REIMAGINED
       </div>
-
       <h1 id="hero-heading">
         See it. <em>Place it.</em><br>Love it.
       </h1>
-
       <p class="hero-sub">
         DropShop AR turns every product page into a full 3D showroom. Spin
         each piece from any angle, check if it actually fits your room using
         the model's real measurements, then drop it into your space with your
         camera — before a single rupee changes hands.
       </p>
-
       <div class="hero-cta-row">
         <a class="btn-hero-primary" href="#shop">Explore Collection</a>
         <button class="btn-hero-secondary" id="heroTryARBtn" data-product-id="sheen-chair">
@@ -125,7 +132,6 @@
           Try AR Now
         </button>
       </div>
-
       <ul class="hero-highlight-list" aria-label="Key features">
         <li>
           <span class="hero-highlight-icon" aria-hidden="true">
@@ -147,7 +153,6 @@
         </li>
       </ul>
     </div>
-
     <div class="hero-visual">
       <div class="hero-product-card" id="heroProductCard">
         <span class="hero-product-tag">Featured — drag to explore in 3D</span>
@@ -179,7 +184,6 @@
           <span class="hero-product-name" id="heroProductName"></span>
           <span class="hero-product-price" id="heroProductPrice"></span>
         </div>
-
         <div class="hero-trust-pill" aria-hidden="true">
           <span class="hero-trust-avatars">
             <span></span><span></span><span></span>
@@ -219,7 +223,6 @@
       <p class="how-it-works-sub">From browsing to buying, every step happens in your space — not just on your screen.</p>
     </div>
     <div class="how-steps">
-
       <div class="how-step">
         <div class="how-step-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -228,7 +231,6 @@
         <h3>Browse in 3D</h3>
         <p>Every product ships as a real 3D model — rotate, zoom and inspect it from any angle before you decide.</p>
       </div>
-
       <div class="how-step">
         <div class="how-step-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
@@ -237,7 +239,6 @@
         <h3>Check the fit</h3>
         <p>Enter your room's width, length and height — DropShop measures the actual model and tells you if it fits.</p>
       </div>
-
       <div class="how-step">
         <div class="how-step-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
@@ -246,7 +247,6 @@
         <h3>Try it in AR</h3>
         <p>Launch your camera and place the piece life-size in your actual room with WebXR, Scene Viewer or Quick Look.</p>
       </div>
-
       <div class="how-step">
         <div class="how-step-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
@@ -255,7 +255,6 @@
         <h3>Compare &amp; buy</h3>
         <p>Shortlist, compare up to three pieces side by side, then add your favorites to cart with confidence.</p>
       </div>
-
     </div>
   </section>
 
@@ -276,7 +275,6 @@
       <div class="section-header">
         <h2 class="section-title" id="shop-heading">Featured Collection</h2>
       </div>
-
       <!-- Discovery toolbar: search, category filters, sort, compare -->
       <div class="shop-toolbar" id="shopToolbar">
         <div class="search-field">
@@ -286,9 +284,7 @@
           </svg>
           <input type="search" id="searchInput" placeholder="Search products…" aria-label="Search products" />
         </div>
-
         <div class="pill-filter-row" id="categoryPills" aria-label="Filter by category"></div>
-
         <select id="sortSelect" class="sort-select" aria-label="Sort products">
           <option value="featured">Featured</option>
           <option value="price-asc">Price: Low to High</option>
@@ -296,7 +292,6 @@
           <option value="rating-desc">Highest Rated</option>
           <option value="newest">Newest</option>
         </select>
-
         <button class="compare-inline-btn" id="compareInlineBtn" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M3 3v18h18M7 15l4-4 3 3 5-6" />
@@ -304,9 +299,7 @@
           Compare <span id="compareInlineCount">0</span>
         </button>
       </div>
-
       <div class="product-grid" id="productGrid" aria-label="Home decor products"></div>
-
       <p class="empty-state" id="emptyState" hidden>No products match your search. Try a different keyword or filter.</p>
     </section>
   </main>
@@ -319,7 +312,6 @@
       <p>Describe your space, mood, colors, budget, or the piece you already own. The AI will match you to the catalog — grounded in real product data, not guesses.</p>
       <span class="coming-soon-pill">Coming soon</span>
     </div>
-
     <div class="ai-stylist-panel">
       <div class="ai-stylist-panel-head">
         <span class="ai-stylist-status"><span class="dot ok" aria-hidden="true"></span>DropShop intelligence</span>
@@ -352,7 +344,6 @@
         </div>
         <p class="footer-tagline">See it. Place it. Love it. Spatial commerce for real rooms.</p>
       </div>
-
       <div class="footer-col">
         <h4>Shop</h4>
         <a href="#shop">All products</a>
@@ -360,19 +351,17 @@
         <a href="#shop">Lighting</a>
         <a href="#shop">Decor</a>
       </div>
-
       <div class="footer-col">
         <h4>Product</h4>
         <a href="#how-it-works">How it works</a>
         <a href="#ai-stylist">AI Stylist</a>
         <a href="#shop">Fit Checker</a>
       </div>
-
       <div class="footer-col">
         <h4>Company</h4>
         <a href="#">About</a>
         <a href="#">Returns &amp; shipping</a>
-        <a href="#">Contact</a>
+        <a href="index.html">← Back to home</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -392,9 +381,7 @@
         </svg>
       </button>
     </div>
-
-    <!-- Live measurement readout — populated from the same
-         model-viewer.getDimensions() call the Fit Checker uses. -->
+    <!-- Live measurement readout -->
     <div class="ar-dims-chip" id="arDimsChip" aria-live="polite">
       <span><strong id="arDimW">–</strong> W</span>
       <span class="ar-dims-sep">×</span>
@@ -403,15 +390,21 @@
       <span><strong id="arDimH">–</strong> H</span>
       <span class="ar-dims-note" id="arDimNote"></span>
     </div>
-
     <div class="ar-spinner-wrap" id="arSpinner" aria-hidden="true">
       <div class="spinner"></div>
     </div>
-
-    <model-viewer id="ar-viewer" alt="3D preview of selected product" ar ar-modes="webxr scene-viewer quick-look"
-      camera-controls auto-rotate-delay="800" rotation-per-second="22deg" shadow-intensity="1"
-      exposure="0.92" shadow-softness="0.75"></model-viewer>
-
+    <model-viewer
+      id="ar-viewer"
+      alt="3D preview of selected product"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      camera-controls
+      auto-rotate-delay="800"
+      rotation-per-second="22deg"
+      shadow-intensity="1"
+      exposure="0.92"
+      shadow-softness="0.75"
+    ></model-viewer>
     <div class="ar-bottombar">
       <button class="btn-launch-ar" id="launchARBtn" aria-label="View product in your space with AR">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -421,8 +414,7 @@
       </button>
       <button class="btn-wishlist" id="wishlistBtn" aria-label="Add to wishlist">
         <svg viewBox="0 0 24 24">
-          <path
-            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
     </div>
@@ -437,12 +429,10 @@
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
-
       <div class="detail-grid">
         <div class="detail-img-wrap">
           <img id="detailImg" src="" alt="" />
         </div>
-
         <div class="detail-info">
           <div class="detail-badges">
             <span class="detail-category-pill" id="detailCategory"></span>
@@ -452,14 +442,11 @@
           <div class="card-rating" id="detailRating"></div>
           <p class="detail-price" id="detailPrice"></p>
           <p class="detail-desc" id="detailDesc"></p>
-
           <div class="detail-spec-grid" id="detailSpecs"></div>
-
           <div class="detail-dimensions" id="detailDimensions">
             <h3>Dimensions</h3>
             <p id="detailDimensionsValue" class="dim-loading">Measuring 3D model…</p>
           </div>
-
           <div class="fit-checker" id="fitChecker">
             <h3>Fit Checker</h3>
             <p class="fit-checker-sub">Enter your available space to see if this piece fits.</p>
@@ -471,7 +458,6 @@
             <button class="btn-hero-secondary" id="fitCheckBtn" style="width:100%; justify-content:center;" disabled>Measuring product…</button>
             <p id="fitResult" class="fit-result" hidden></p>
           </div>
-
           <div class="detail-actions">
             <button class="btn-launch-ar detail-btn" id="detailAddCartBtn">Add to Cart</button>
             <button class="btn-wishlist detail-icon-btn" id="detailWishlistBtn" aria-label="Add to wishlist">
@@ -544,10 +530,44 @@
   <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Off-screen probe used purely to read real GLB dimensions via getDimensions() -->
-  <model-viewer id="dimensionProbe" style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;" aria-hidden="true"></model-viewer>
+  <model-viewer
+    id="dimensionProbe"
+    style="position:absolute;width:2px;height:2px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;"
+    aria-hidden="true"
+  ></model-viewer>
+
+  <!-- Auth-aware nav: profile chip + dashboard/sign-in link -->
+  <script>
+    (function () {
+      try {
+        var token = localStorage.getItem('dropshop_token');
+        var raw   = localStorage.getItem('dropshop_user');
+        var user  = raw ? JSON.parse(raw) : null;
+
+        // Profile chip — visible only for logged-in users
+        var chip = document.getElementById('storeProfileChip');
+        var nameEl = document.getElementById('storeProfileName');
+        if (chip && nameEl && user && token) {
+          var display = (user.full_name && user.full_name.trim()) || user.email || 'Account';
+          nameEl.textContent = display;
+          chip.style.display = 'inline-flex';
+        }
+
+        // Auth nav link
+        var link = document.getElementById('navAuthLink');
+        if (link) {
+          if (token) {
+            link.textContent = '← Dashboard';
+            link.href = 'index.html';
+          } else {
+            link.textContent = 'Sign In';
+            link.href = 'login.html';
+          }
+        }
+      } catch (_) {}
+    })();
+  </script>
 
   <script src="script.js" defer></script>
-
 </body>
-
 </html>

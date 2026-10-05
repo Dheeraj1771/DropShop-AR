@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f1ea" />
+  <title>My Profile — DropShop AR</title>
+
+  <script>
+    try {
+      if (localStorage.getItem('dropshop_theme') === 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (_) {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --bg:           #f6f1ea;
+      --bg2:          #efe7db;
+      --surface:      #ffffff;
+      --border:       rgba(23, 20, 18, 0.08);
+      --border-h:     rgba(23, 20, 18, 0.16);
+      --text:         #17140f;
+      --text-2:       #6b6459;
+      --accent:       #c1502e;
+      --accent-dim:   rgba(193, 80, 46, 0.14);
+      --accent-glow:  rgba(193, 80, 46, 0.32);
+      --success:      #1a6b3c;
+      --success-dim:  rgba(26, 107, 60, 0.08);
+      --success-bdr:  rgba(26, 107, 60, 0.22);
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --font:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Fraunces', serif;
+      --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-theme="dark"] {
+      --bg:          #14120f;
+      --bg2:         #1c1915;
+      --surface:     #201d18;
+      --border:      rgba(255, 255, 255, 0.08);
+      --border-h:    rgba(255, 255, 255, 0.16);
+      --text:        #f2ede3;
+      --text-2:      #a39c8d;
+      --accent:      #e0703f;
+      --accent-dim:  rgba(224, 112, 63, 0.16);
+      --accent-glow: rgba(224, 112, 63, 0.32);
+      --success:     #4dbb80;
+      --success-dim: rgba(77, 187, 128, 0.1);
+      --success-bdr: rgba(77, 187, 128, 0.22);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px calc(32px + env(safe-area-inset-bottom));
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Brand ─────────────────────────────────────────────── */
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+    .brand-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.07);
+    }
+
+    .auth-back {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-decoration: none;
+      transition: color 0.18s;
+    }
+    .auth-back:hover { color: var(--accent); }
+
+    .auth-card h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .auth-card h1 em { font-style: italic; color: var(--accent); }
+
+    .auth-subtitle {
+      font-size: 13.5px;
+      color: var(--text-2);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Meta chip (read-only email + role) ─────────────────── */
+    .profile-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 24px;
+    }
+    .profile-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .profile-avatar svg {
+      width: 16px; height: 16px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .profile-email { font-size: 13.5px; font-weight: 600; }
+    .profile-role {
+      font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-radius: 999px;
+      padding: 2px 8px;
+      margin-left: auto;
+    }
+
+    /* ── Fields ─────────────────────────────────────────────── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .field label {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-2); letter-spacing: 0.2px;
+    }
+    .field input,
+    .field textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: var(--font);
+      color: var(--text);
+      transition: border-color 0.18s, box-shadow 0.18s;
+      outline: none;
+      resize: vertical;
+      -webkit-appearance: none;
+    }
+    .field input { height: 46px; }
+    .field textarea { min-height: 80px; }
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .field input::placeholder,
+    .field textarea::placeholder { color: var(--text-2); opacity: 0.6; }
+
+    /* ── Feedback messages ──────────────────────────────────── */
+    .auth-message {
+      font-size: 13px;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    .auth-error {
+      color: #c0392b;
+      background: rgba(192, 57, 43, 0.08);
+      border: 1px solid rgba(192, 57, 43, 0.2);
+    }
+    [data-theme="dark"] .auth-error   { color: #ff7b6b; background: rgba(255,123,107,.1); border-color: rgba(255,123,107,.22); }
+    .auth-success {
+      color: var(--success);
+      background: var(--success-dim);
+      border: 1px solid var(--success-bdr);
+    }
+
+    /* ── Submit ─────────────────────────────────────────────── */
+    .btn-submit {
+      width: 100%;
+      height: 50px;
+      margin-top: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 4px 18px var(--accent-glow);
+      transition: opacity 0.18s, transform 0.14s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-submit:hover   { opacity: 0.88; }
+    .btn-submit:active  { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Skeleton shimmer while fetching ────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 6px;
+      height: 18px;
+      width: 60%;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    @media (max-width: 500px) {
+      .auth-card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <a class="auth-brand" href="store.html" aria-label="Back to store">
+    <div class="brand-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="brand-name">DropShop AR</span>
+  </a>
+
+  <div class="auth-card">
+    <a href="store.html" class="auth-back">← Back to Store</a>
+
+    <h1>My <em>Profile</em></h1>
+    <p class="auth-subtitle">Update your name and delivery address.</p>
+
+    <!-- Read-only user meta -->
+    <div class="profile-meta" id="profileMeta" aria-label="Account details">
+      <span class="profile-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </span>
+      <span class="profile-email" id="profileEmail"><span class="skeleton"></span></span>
+      <span class="profile-role" id="profileRole"></span>
+    </div>
+
+    <form id="profileForm" novalidate>
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          placeholder="Your full name"
+          autocomplete="name"
+        />
+      </div>
+
+      <div class="field">
+        <label for="address">Delivery address</label>
+        <textarea
+          id="address"
+          name="address"
+          placeholder="Street, city, PIN code"
+          autocomplete="street-address"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <button class="btn-submit" type="submit" id="saveBtn">Save Changes</button>
+    </form>
+  </div>
+
+  <script>
+    'use strict';
+
+    const API_BASE = 'http://localhost:5001/api';
+
+    /* ── Helpers ─────────────────────────────────────────────── */
+
+    function getToken() {
+      try { return localStorage.getItem('dropshop_token'); } catch (_) { return null; }
+    }
+
+    function showMessage(message, type) {
+      const form = document.getElementById('profileForm');
+      let box = form.querySelector('.auth-message');
+      if (!box) {
+        box = document.createElement('p');
+        const btn = form.querySelector('#saveBtn');
+        form.insertBefore(box, btn);
+      }
+      box.className = 'auth-message ' + (type === 'success' ? 'auth-success' : 'auth-error');
+      box.setAttribute('role', 'alert');
+      box.textContent = message;
+      box.hidden = false;
+    }
+
+    function clearMessage() {
+      const box = document.querySelector('.auth-message');
+      if (box) box.hidden = true;
+    }
+
+    function setLoading(on) {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = on;
+      btn.textContent = on ? 'Saving…' : 'Save Changes';
+    }
+
+    /* ── Redirect unauthenticated visitors ──────────────────── */
+    if (!getToken()) {
+      window.location.href = 'login.html';
+    }
+
+    /* ── Load current profile from the API ──────────────────── */
+    async function loadProfile() {
+      const token = getToken();
+      try {
+        const res  = await fetch(`${API_BASE}/users/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.status === 401) { window.location.href = 'login.html'; return; }
+        const data = await res.json();
+        const u    = data.user;
+
+        document.getElementById('profileEmail').textContent = u.email;
+        document.getElementById('profileRole').textContent  = u.role;
+        document.getElementById('fullName').value  = u.full_name || '';
+        document.getElementById('address').value   = u.address   || '';
+
+        // Sync localStorage so store.html chip reflects any server-side name
+        try {
+          const stored = JSON.parse(localStorage.getItem('dropshop_user') || '{}');
+          stored.full_name = u.full_name;
+          localStorage.setItem('dropshop_user', JSON.stringify(stored));
+        } catch (_) {}
+
+      } catch (err) {
+        document.getElementById('profileEmail').textContent = 'Could not load profile';
+        console.error('[loadProfile]', err);
+      }
+    }
+
+    /* ── Submit profile update ──────────────────────────────── */
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessage();
+      setLoading(true);
+
+      const token     = getToken();
+      const full_name = document.getElementById('fullName').value.trim();
+      const address   = document.getElementById('address').value.trim();
+
+      try {
+        const res  = await fetch(`${API_BASE}/users/profile`, {
+          method:  'PUT',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ full_name, address }),
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+
+        if (!res.ok) {
+          showMessage(data.error || 'Update failed. Please try again.', 'error');
+          return;
+        }
+
+        // Persist updated name in localStorage so nav chips update immediately
+        try {
+          const stored = JSON.parse(localStorage.getItem('dropshop_user') || '{}');
+          stored.full_name = data.user.full_name;
+          localStorage.setItem('dropshop_user', JSON.stringify(stored));
+        } catch (_) {}
+
+        showMessage('Profile saved successfully.', 'success');
+
+      } catch (err) {
+        showMessage('Could not reach the server. Make sure the backend is running.', 'error');
+        console.error('[saveProfile]', err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    /* ── Init ────────────────────────────────────────────────── */
+    loadProfile();
+  </script>
+
+</body>
+</html>

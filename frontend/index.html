@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="DropShop AR — place furniture in your room before you buy it. No app required." />
+  <meta name="theme-color" content="#f6f1ea" />
+  <title>DropShop AR</title>
+
+  <!-- Apply saved theme before first paint to prevent flash -->
+  <script>
+    try {
+      if (localStorage.getItem('dropshop_theme') === 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } catch (_) {}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ── Design tokens ───────────────────────────────────────────
+       Exact values from the storefront's styles.css.
+    ──────────────────────────────────────────────────────────── */
+    :root {
+      --bg:           #f6f1ea;
+      --bg2:          #efe7db;
+      --surface:      #ffffff;
+      --border:       rgba(23, 20, 18, 0.08);
+      --border-h:     rgba(23, 20, 18, 0.16);
+      --text:         #17140f;
+      --text-2:       #6b6459;
+      --accent:       #c1502e;
+      --accent-dim:   rgba(193, 80, 46, 0.14);
+      --accent-glow:  rgba(193, 80, 46, 0.32);
+      --radius-sm:    10px;
+      --radius-md:    16px;
+      --radius-lg:    24px;
+      --font:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Fraunces', serif;
+      --ease:         cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg:           #14120f;
+      --bg2:          #1c1915;
+      --surface:      #201d18;
+      --border:       rgba(255, 255, 255, 0.08);
+      --border-h:     rgba(255, 255, 255, 0.16);
+      --text:         #f2ede3;
+      --text-2:       #a39c8d;
+      --accent:       #e0703f;
+      --accent-dim:   rgba(224, 112, 63, 0.16);
+      --accent-glow:  rgba(224, 112, 63, 0.32);
+    }
+
+    /* ── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Nav ─────────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 62px;
+      background: rgba(246, 241, 234, 0.85);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      border-bottom: 1px solid var(--border);
+    }
+    [data-theme="dark"] .nav {
+      background: rgba(20, 18, 15, 0.85);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: grid; place-items: center;
+      box-shadow: 0 0 18px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 19px; height: 19px; fill: #fff; }
+    .logo-text {
+      font-size: 17px; font-weight: 700;
+      letter-spacing: -0.5px; color: var(--text);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Theme toggle */
+    .theme-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg2); border-color: var(--border-h); }
+    .theme-btn svg {
+      width: 16px; height: 16px;
+      stroke: var(--text-2);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 24px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Soft radial glow behind the headline */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        ellipse 70% 50% at 50% 20%,
+        var(--accent-dim) 0%,
+        transparent 70%
+      );
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 8vw, 68px);
+      font-weight: 600;
+      letter-spacing: -2px;
+      line-height: 1.08;
+      margin-bottom: 22px;
+      position: relative;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: clamp(15px, 2vw, 17px);
+      color: var(--text-2);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      position: relative;
+    }
+
+    /* ── Feature pills ───────────────────────────────────────── */
+    .feature-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 52px;
+      position: relative;
+    }
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+    .feature-pill svg {
+      width: 14px; height: 14px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    /* ── Auth section ────────────────────────────────────────── */
+    #auth-section {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      min-height: 120px; /* reserve space during JS evaluation */
+    }
+
+    /* Welcome message shown when logged in */
+    .welcome-msg {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 20px;
+      font-size: 14px;
+      color: var(--text-2);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+    .welcome-avatar {
+      width: 32px; height: 32px;
+      background: var(--accent-dim);
+      border-radius: 50%;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .welcome-avatar svg {
+      width: 16px; height: 16px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .welcome-email {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .welcome-role {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-radius: 999px;
+      padding: 2px 8px;
+      margin-left: 4px;
+    }
+
+    /* CTA button row */
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .btn-primary {
+      height: 50px;
+      padding: 0 28px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.2px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transition: opacity 0.18s, transform 0.14s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:hover  { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary svg { width: 16px; height: 16px; fill: #fff; flex-shrink: 0; }
+
+    .btn-secondary {
+      height: 50px;
+      padding: 0 24px;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font);
+      border: 1.5px solid var(--border-h);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.2px;
+      transition: background 0.18s, border-color 0.18s, transform 0.14s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-secondary:hover  { background: var(--bg2); border-color: var(--border-h); }
+    .btn-secondary:active { transform: scale(0.97); }
+
+    .btn-ghost {
+      height: 40px;
+      padding: 0 18px;
+      background: transparent;
+      color: var(--text-2);
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: var(--font);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.18s, border-color 0.18s, background 0.18s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ghost:hover {
+      color: var(--text);
+      border-color: var(--border-h);
+      background: var(--bg2);
+    }
+    .btn-ghost svg {
+      width: 14px; height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Social proof strip ──────────────────────────────────── */
+    .proof-strip {
+      margin-top: 56px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-2);
+      font-size: 13px;
+      position: relative;
+    }
+    .proof-avatars {
+      display: flex;
+    }
+    .proof-avatars span {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      background: var(--bg2);
+      margin-right: -8px;
+    }
+    .proof-avatars span:nth-child(1) { background: #d4a89a; }
+    .proof-avatars span:nth-child(2) { background: #a8c4d4; }
+    .proof-avatars span:nth-child(3) { background: #a8d4b0; }
+    .proof-avatars span:last-child   { margin-right: 0; }
+
+    .proof-stars { color: var(--accent); letter-spacing: -1px; font-size: 13px; }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .site-footer {
+      text-align: center;
+      padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--text-2);
+    }
+    .site-footer a { color: var(--accent); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+
+    /* ── Animations ──────────────────────────────────────────── */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 500px) {
+      .nav { padding: 0 16px; }
+      .hero { padding: 60px 16px 48px; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+      .cta-row { flex-direction: column; align-items: stretch; width: 100%; max-width: 320px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ───────────────────────────────────────────────────── -->
+  <header>
+    <nav class="nav" aria-label="Main navigation">
+      <a class="nav-logo" href="index.html">
+        <div class="logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span class="logo-text">DropShop AR</span>
+      </a>
+      <div class="nav-right">
+        <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" aria-pressed="false">
+          <svg id="iconSun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+          <svg id="iconMoon" viewBox="0 0 24 24" style="display:none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <main>
+    <section class="hero" aria-labelledby="hero-heading">
+
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        WebAR Shopping — No App Required
+      </div>
+
+      <h1 id="hero-heading">
+        See it. <em>Place it.</em><br>Love it.
+      </h1>
+
+      <p class="hero-sub">
+        DropShop AR turns every product page into a live 3D showroom.
+        Spin furniture from any angle, check if it fits your room, then drop
+        it into your space with your camera — before a single rupee changes hands.
+      </p>
+
+      <!-- Feature highlights -->
+      <div class="feature-row" aria-label="Key features">
+        <span class="feature-pill">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          True-to-scale 3D models
+        </span>
+        <span class="feature-pill">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          WebXR, Scene Viewer &amp; Quick Look
+        </span>
+        <span class="feature-pill">
+          <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Works in your mobile browser
+        </span>
+      </div>
+
+      <!-- ── Dynamic auth area ────────────────────────────────── -->
+      <div id="auth-section" role="region" aria-label="Account actions" aria-live="polite"></div>
+
+      <!-- Social proof -->
+      <div class="proof-strip" aria-hidden="true">
+        <div class="proof-avatars">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="proof-stars">★★★★★</span>
+        <span>Loved by early shoppers</span>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>&copy; 2026 <a href="#">DropShop AR</a>. B.Tech Capstone Project.</p>
+  </footer>
+
+  <script>
+    'use strict';
+
+    /* ── Auth state helpers ────────────────────────────────────── */
+
+    function getSession() {
+      try {
+        const token = localStorage.getItem('dropshop_token');
+        const user  = JSON.parse(localStorage.getItem('dropshop_user') || 'null');
+        return (token && user) ? { token, user } : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function logout() {
+      try {
+        localStorage.removeItem('dropshop_token');
+        localStorage.removeItem('dropshop_user');
+      } catch (_) {}
+      renderAuthSection(); // update UI in-place — no hard reload needed
+    }
+
+    /* ── Auth section renderer ─────────────────────────────────── *
+       Called once on load and again after logout so the DOM always
+       reflects the current session state without a page reload.
+    ──────────────────────────────────────────────────────────────── */
+    function renderAuthSection() {
+      const section = document.getElementById('auth-section');
+      const session = getSession();
+
+      if (session) {
+        /* ── Logged-in state ─────────────────────────────────── */
+        const { email, role } = session.user;
+        section.innerHTML = `
+          <div class="welcome-msg" aria-label="Signed in as ${email}">
+            <span class="welcome-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <span>
+              Welcome back,
+              <span class="welcome-email">${escHtml(email)}</span>
+              <span class="welcome-role">${escHtml(role)}</span>
+            </span>
+          </div>
+          <div class="cta-row">
+            <a class="btn-primary" href="store.html">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Enter Store
+            </a>
+            <button class="btn-ghost" id="logoutBtn">
+              <svg viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Log Out
+            </button>
+          </div>
+        `;
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+      } else {
+        /* ── Logged-out state ────────────────────────────────── */
+        section.innerHTML = `
+          <div class="cta-row">
+            <a class="btn-primary" href="register.html">
+              Create Account
+            </a>
+            <a class="btn-secondary" href="login.html">
+              Sign In
+            </a>
+            <a class="btn-ghost" href="store.html">
+              Browse as Guest →
+            </a>
+          </div>
+        `;
+      }
+    }
+
+    /* Simple HTML-escape — prevents XSS from stored user data */
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* ── Theme toggle ─────────────────────────────────────────── */
+    const themeToggle = document.getElementById('themeToggle');
+    const iconSun     = document.getElementById('iconSun');
+    const iconMoon    = document.getElementById('iconMoon');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        iconSun.style.display  = 'none';
+        iconMoon.style.display = 'block';
+        themeToggle.setAttribute('aria-pressed', 'true');
+        themeToggle.setAttribute('aria-label', 'Switch to light theme');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        iconSun.style.display  = 'block';
+        iconMoon.style.display = 'none';
+        themeToggle.setAttribute('aria-pressed', 'false');
+        themeToggle.setAttribute('aria-label', 'Switch to dark theme');
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.hasAttribute('data-theme');
+      applyTheme(!isDark);
+      try { localStorage.setItem('dropshop_theme', !isDark ? 'dark' : 'light'); } catch (_) {}
+    });
+
+    // Sync toggle icon with any theme already applied by the inline script
+    applyTheme(document.documentElement.hasAttribute('data-theme'));
+
+    /* ── Init ─────────────────────────────────────────────────── */
+    renderAuthSection();
+  </script>
+
+</body>
+</html>

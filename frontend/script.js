@@ -326,7 +326,7 @@ searchNavBtn.addEventListener('click', () => {
 });
 
 document.getElementById('accountBtn').addEventListener('click', () => {
-  showToast('Accounts arrive once the backend phase begins');
+  window.location.href = 'account.html';
 });
 
 function getFilteredSortedProducts() {
