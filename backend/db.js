@@ -12,7 +12,7 @@ const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
-  ssl: { rejectUnauthorized: false } // Required for Supabase cloud connections
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 // Verify the connection is alive on startup so a bad DATABASE_URL fails
@@ -75,6 +75,16 @@ async function initSchema() {
       ALTER TABLE users
         ADD COLUMN IF NOT EXISTS full_name TEXT,
         ADD COLUMN IF NOT EXISTS address   TEXT;
+    `);
+
+    // ── Migrate: category column + unique constraint on model_url ─────────
+    await client.query(`
+      ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS category TEXT;
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS products_model_url_idx
+        ON products (model_url);
     `);
 
     await client.query('COMMIT');

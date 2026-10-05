@@ -43,110 +43,65 @@ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)
    if that live measurement fails, and is always labeled as an
    estimate in the UI, never presented as measured.
 ─────────────────────────────────────────────────────────────── */
-const PRODUCTS = [
-  {
-    id: 'glam-velvet-sofa',
-    category: 'Sofas',
-    title: 'Glam Velvet Sofa',
-    desc: 'Deep-seat velvet cushions on a polished gold frame — bold and luxe.',
-    price: 89999,
-    oldPrice: 109999,
-    pill: 'Sale',
-    pillType: 'sale',
-    rating: 4.7,
-    reviewCount: 214,
-    availability: 'in-stock',
-    images: ['https://m.media-amazon.com/images/I/71-ny3AfH2L._AC_UF894,1000_QL80_.jpg'],
-    model: { src: '/models/GlamVelvetSofa.glb', iosSrc: null },
-    specs: { material: 'Velvet upholstery, gold-finished steel frame', color: 'Emerald / Gold', assembly: 'Legs attach on arrival' },
-    fallbackDimsFt: { width: 6.6, depth: 3.0, height: 2.8 },
-  },
-  {
-    id: 'glass-hurricane-candle',
-    category: 'Decor',
-    title: 'Glass Hurricane Candle Holder',
-    desc: 'Hand-blown borosilicate glass with a brushed-brass base.',
-    price: 1499,
-    oldPrice: null,
-    pill: 'New',
-    pillType: 'new',
-    rating: 4.5,
-    reviewCount: 58,
-    availability: 'in-stock',
-    images: ['https://m.media-amazon.com/images/I/81cfIOjQVyL._SL1500_.jpg'],
-    model: { src: '/models/GlassHurricaneCandleHolder.glb', iosSrc: null },
-    specs: { material: 'Borosilicate glass, brushed brass', color: 'Clear / Brass', assembly: 'None required' },
-    fallbackDimsFt: { width: 0.5, depth: 0.5, height: 0.8 },
-  },
-  {
-    id: 'glass-vase-flowers',
-    category: 'Decor',
-    title: 'Glass Vase Flowers',
-    desc: 'Sculptural clear glass vase with a dried pampas arrangement.',
-    price: 1199,
-    oldPrice: 1499,
-    pill: 'Sale',
-    pillType: 'sale',
-    rating: 4.3,
-    reviewCount: 41,
-    availability: 'in-stock',
-    images: ['https://www.homesake.in/cdn/shop/files/IH0F231-SMK-TEAR_Theme2_a214b76c-dd7d-4b00-8993-f14c23f990ab.jpg?v=1765962191'],
-    model: { src: '/models/GlassVaseFlowers.glb', iosSrc: null },
-    specs: { material: 'Clear glass, dried pampas grass', color: 'Clear / Natural', assembly: 'None required' },
-    fallbackDimsFt: { width: 0.7, depth: 0.7, height: 1.2 },
-  },
-  {
-    id: 'iridescence-lamp',
-    category: 'Lighting',
-    title: 'Iridescence Lamp',
-    desc: 'Colour-shifting iridescent shade on a matte-white ceramic base.',
-    price: 4999,
-    oldPrice: null,
-    pill: 'New',
-    pillType: 'new',
-    rating: 4.8,
-    reviewCount: 96,
-    availability: 'in-stock',
-    images: ['https://i.pinimg.com/736x/2a/2f/3b/2a2f3b6c856efe23d75107d6dc887b88.jpg'],
-    model: { src: '/models/IridescenceLamp.glb', iosSrc: null },
-    specs: { material: 'Iridescent glass shade, ceramic base', color: 'Iridescent / Matte White', assembly: 'None required' },
-    fallbackDimsFt: { width: 1.0, depth: 1.0, height: 1.5 },
-  },
-  {
-    id: 'sheen-chair',
-    category: 'Seating',
-    title: 'Sheen Accent Chair',
-    desc: 'Performance fabric shell with a satin-nickel swivel base.',
-    price: 62499,
-    oldPrice: 74999,
-    pill: 'Bestseller',
-    pillType: '',
-    rating: 4.9,
-    reviewCount: 312,
-    availability: 'low-stock',
-    images: ['https://bigbossfurniture.ca/storage/app/public/uploads/SZgs93BHvITs6HUYdnV8pLliUzCU26HrnqPMBBYD.jpg'],
-    model: { src: '/models/SheenChair.glb', iosSrc: null },
-    specs: { material: 'Performance fabric, satin-nickel base', color: 'Charcoal / Nickel', assembly: 'Swivel base clicks into place' },
-    fallbackDimsFt: { width: 2.3, depth: 2.3, height: 3.0 },
-  },
-  {
-    id: 'silk-pouf',
-    category: 'Seating',
-    title: 'Specular Silk Pouf',
-    desc: 'Hand-embroidered silk pouf with a lustrous high-sheen finish.',
-    price: 8999,
-    oldPrice: null,
-    pill: 'New',
-    pillType: 'new',
-    rating: 4.4,
-    reviewCount: 27,
-    availability: 'in-stock',
-    images: ['https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T1/images/I/41ZUn14gyzL._SY300_SX300_QL70_FMwebp_.jpg'],
-    model: { src: '/models/SpecularSilkPouf.glb', iosSrc: null },
-    specs: { material: 'Hand-embroidered silk, foam fill', color: 'Ivory / Gold thread', assembly: 'None required' },
-    fallbackDimsFt: { width: 1.6, depth: 1.6, height: 1.3 },
-  },
-];
+
+/**
+ * PRODUCTS is populated at runtime from GET /api/products.
+ * The shape mirrors what the rest of the app expects so no other
+ * code needs to change:
+ *   { id, category, title, desc, price, oldPrice, pill, pillType,
+ *     rating, reviewCount, availability, images, model, specs, fallbackDimsFt, dbId }
+ *
+ * `dbId` is the integer primary key from the DB — used when sending
+ * context to the AI Stylist endpoint.
+ */
+let PRODUCTS = [];
+
+/**
+ * Fetch products from the backend and map DB rows to the app's
+ * internal product schema. Falls back to an empty array on error
+ * so the rest of the app degrades gracefully (empty grid, no crash).
+ */
+async function loadProductsFromAPI() {
+  try {
+    const res = await fetch('http://localhost:5001/api/products');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    PRODUCTS = (data.products || []).map(row => {
+      // Derive a URL-safe id from the model filename
+      // e.g. "/models/GlamVelvetSofa.glb" → "glam-velvet-sofa"
+      const stem = (row.model_url || '')
+        .replace(/^\/models\//, '')
+        .replace(/\.glb$/i, '');
+      const id = stem
+        .replace(/([A-Z])/g, '-$1')
+        .replace(/^-/, '')
+        .toLowerCase();
+
+      return {
+        dbId: row.id,               // DB primary key for AI context
+        id,
+        category: row.category || 'Decor',
+        title: row.name,
+        desc: row.description || '',
+        price: Number(row.price),
+        oldPrice: null,
+        pill: null,
+        pillType: '',
+        rating: 4.5,
+        reviewCount: 0,
+        availability: 'in-stock',
+        images: [row.image_url || 'https://placehold.co/600x600/1c1915/a39c8d?text=AR+Preview'],
+        model: { src: row.model_url, iosSrc: null },
+        specs: { material: '—', color: '—', assembly: '—' },
+        fallbackDimsFt: { width: 2.0, depth: 2.0, height: 2.0 },
+      };
+    });
+  } catch (err) {
+    console.error('[loadProductsFromAPI] Failed — running with empty catalogue:', err.message);
+    PRODUCTS = [];
+  }
+}
 
 const productById = id => PRODUCTS.find(p => p.id === id);
 
@@ -1174,13 +1129,172 @@ if (heroTryARBtn) {
 /* ═══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
-renderHeroProduct();
-renderCategoryPills();
-initialGridLoad();
-syncWishlistUI();
-syncCartUI();
-renderRecentlyViewed();
-syncCompareUI();
+/* ═══════════════════════════════════════════════════════════════
+   INIT — load products from DB then boot the UI
+═══════════════════════════════════════════════════════════════ */
+(async () => {
+  await loadProductsFromAPI();
 
-const statProductCount = document.getElementById('statProductCount');
-if (statProductCount) statProductCount.textContent = PRODUCTS.length;
+  if (PRODUCTS.length === 0) {
+    console.warn(
+      '[DropShop AR] Product catalogue is empty — UI rendering skipped.\n' +
+      'Run: node backend/seed.js  to populate the database.'
+    );
+    return;
+  }
+
+  renderHeroProduct();
+  renderCategoryPills();
+  initialGridLoad();
+  syncWishlistUI();
+  syncCartUI();
+  renderRecentlyViewed();
+  syncCompareUI();
+
+  const statProductCount = document.getElementById('statProductCount');
+  if (statProductCount) statProductCount.textContent = PRODUCTS.length;
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   AI STYLIST CHAT
+═══════════════════════════════════════════════════════════════ */
+
+(function () {
+  'use strict';
+
+  const AI_ENDPOINT = 'http://localhost:5001/api/ai/chat';
+  const chatHistory = document.getElementById('chat-history');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const chatChips = document.getElementById('chat-chips');
+
+  if (!chatHistory || !chatInput || !chatSend) return;
+
+  /* ── The model-viewer to manipulate (AR modal viewer) ──────── */
+  const mv = document.getElementById('ar-viewer');
+
+  /* ── DOM helpers ─────────────────────────────────────────── */
+
+  function appendMsg(text, role) {
+    const row = document.createElement('div');
+    row.className = `chat-msg chat-msg--${role}`;
+    const bubble = document.createElement('span');
+    bubble.className = 'chat-msg__bubble';
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    chatHistory.appendChild(row);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    return row;
+  }
+
+  function showTyping() {
+    const row = document.createElement('div');
+    row.className = 'chat-msg chat-msg--ai chat-typing';
+    row.innerHTML = `
+      <span class="chat-msg__bubble">
+        <span></span><span></span><span></span>
+      </span>`;
+    row.id = 'chat-typing-indicator';
+    chatHistory.appendChild(row);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('chat-typing-indicator');
+    if (el) el.remove();
+  }
+
+  /* ── 3D model manipulation ───────────────────────────────── */
+
+  async function applyCommand(command) {
+    if (!command || !mv) return;
+
+    if (command.color) {
+      try {
+        if (!mv.model) return;             // model not yet loaded — skip
+        await mv.model.updateComplete;     // wait for model to be ready
+        const mat = mv.model?.materials?.[0];
+        if (mat) {
+          mat.pbrMetallicRoughness.setBaseColorFactor(command.color);
+        } else {
+          showToast('Open a product in AR first to change its color');
+        }
+      } catch (err) {
+        console.warn('[AI] color apply failed:', err.message);
+      }
+    }
+
+    if (command.scale != null) {
+      const s = parseFloat(command.scale);
+      if (!isNaN(s) && s > 0) {
+        mv.setAttribute('scale', `${s} ${s} ${s}`);
+      }
+    }
+  }
+
+  /* ── Send message ────────────────────────────────────────── */
+
+  async function sendMessage(text) {
+    text = text.trim();
+    if (!text) return;
+
+    chatInput.value = '';
+    chatSend.disabled = true;
+    appendMsg(text, 'user');
+    showTyping();
+
+    try {
+      const res = await fetch('http://localhost:5001/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          // Send the integer DB primary key so the backend can query
+          // the products table for rich context to inject into the AI prompt.
+          productId: currentARProductId
+            ? (productById(currentARProductId)?.dbId ?? null)
+            : null,
+        }),
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (!res.ok) {
+        appendMsg(data.error || 'Something went wrong. Please try again.', 'ai');
+        return;
+      }
+
+      appendMsg(data.reply, 'ai');
+      applyCommand(data.command);
+
+    } catch (err) {
+      removeTyping();
+      appendMsg('Could not reach the AI server. Make sure the backend is running.', 'ai');
+      console.error('[AI Chat Error]:', err);
+    } finally {
+      chatSend.disabled = false;
+      chatInput.focus();
+    }
+  }
+
+  /* ── Event listeners ─────────────────────────────────────── */
+
+  chatSend.addEventListener('click', () => sendMessage(chatInput.value));
+
+  chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(chatInput.value);
+    }
+  });
+
+  // Quick-prompt chips
+  if (chatChips) {
+    chatChips.addEventListener('click', e => {
+      const chip = e.target.closest('[data-ai-chip]');
+      if (!chip) return;
+      sendMessage(chip.textContent.trim());
+    });
+  }
+})();
